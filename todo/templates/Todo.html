@@ -6,26 +6,54 @@
         body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f4; }
         .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .todo-item { border-bottom: 1px solid #eee; padding: 10px 0; display: flex; justify-content: space-between; }
-        .completed { text-decoration: line-through; color: gray; }
-        .tag { background: #007bff; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; }
+        
+        /* Base styles for status badges */
+        .tag { color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; font-weight: bold; }
+        
+        /* Color variations based on state */
+        .tag-active { background-color: #28a745; }       /* Green */
+        .tag-in_progress { background-color: #ffc107; color: #212529; } /* Yellow */
+        .tag-completed { background-color: #6c757d; }     /* Gray */
+        .tag-discontinued { background-color: #dc3545; }  /* Red */
+
+        /* Text treatments for the title based on status string */
+        .text-completed { text-decoration: line-through; color: gray; }
+        .text-discontinued { text-decoration: line-through; color: #dc3545; opacity: 0.6; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>My Activities</h1>
+    <h1>My Activities list</h1>
     {% for todo in todos %}
         <div class="todo-item">
-            <div>
-                <strong class="{% if todo.completed %}completed{% endif %}">
-                    {{ todo.title }}
-                </strong>
-                <p>{{ todo.description }}</p>
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+                <input type="checkbox" 
+                       id="todo-{{ forloop.counter }}" 
+                       {% if todo.status == 'completed' %}checked{% endif %}
+                       style="margin-top: 4px; cursor: pointer;">
+                
+                <div>
+                    <label for="todo-{{ forloop.counter }}" 
+                           class="{% if todo.status == 'completed' %}text-completed{% elif todo.status == 'discontinued' %}text-discontinued{% endif %}" 
+                           style="font-weight: bold; cursor: pointer; display: block;">
+                        {{ todo.title }}
+                    </label>
+                    
+                    <div class="subtask-container" style="margin-top: 8px; padding-left: 15px;">
+                        {{ todo.description }}
+                    </div>
+                </div>
             </div>
-            {% if todo.completed %}
-                <span class="tag">Finished</span>
-            {% else %}
-                <span class="tag" style="background: #28a745;">Active</span>
+            
+            {% if todo.status == 'active' %}
+                <span class="tag tag-active">Active</span>
+            {% elif todo.status == 'in_progress' %}
+                <span class="tag tag-in_progress">In Progress</span>
+            {% elif todo.status == 'completed' %}
+                <span class="tag tag-completed">Completed</span>
+            {% elif todo.status == 'discontinued' %}
+                <span class="tag tag-discontinued">Discontinued</span>
             {% endif %}
         </div>
     {% empty %}
@@ -33,5 +61,42 @@
     {% endfor %}
 </div>
 
+<script>
+    // Find all the description containers on the page
+    document.querySelectorAll('.subtask-container').forEach((container, activityIndex) => {
+        const rawText = container.textContent.trim();
+        
+        if (!rawText) return;
+
+        // Split the text into an array wherever a line break occurs
+        const phases = rawText.split('\n');
+        
+        container.innerHTML = '';
+
+        // Loop through each phase and build an interactive checklist element
+        phases.forEach((phaseText, phaseIndex) => {
+            const trimmedPhase = phaseText.trim();
+            
+            if (trimmedPhase.length > 0) {
+                const subTaskRow = document.createElement('div');
+                subTaskRow.style.display = 'flex';
+                subTaskRow.style.alignItems = 'center';
+                subTaskRow.style.gap = '8px';
+                subTaskRow.style.marginBottom = '6px';
+
+                const uniqueId = `sub-${activityIndex}-${phaseIndex}`;
+
+                subTaskRow.innerHTML = `
+                    <input type="checkbox" id="${uniqueId}" style="cursor:pointer;">
+                    <label for="${uniqueId}" style="font-size: 0.9em; color: #333; cursor:pointer;">
+                        ${trimmedPhase}
+                    </label>
+                `;
+                
+                container.appendChild(subTaskRow);
+            }
+        });
+    });
+</script>
 </body>
 </html>

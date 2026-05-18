@@ -3,7 +3,15 @@ from django.db import models
 class Todo(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
-    completed = models.BooleanField(default=False)
+    status_choises = [
+        ('active', 'Active'), 
+        ('in_progress', 'In Progress'),
+        ('discontinued', 'Discontinued'),
+        ('completed', 'Completed'),]
+    status = models.CharField(
+        max_length=20,
+        choices=status_choises,
+        default='active')
     class priority(models.TextChoices):
         LOW = 'Low'
         MEDIUM = 'Medium'
